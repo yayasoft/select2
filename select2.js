@@ -1,7 +1,9 @@
 /*
 Copyright 2012 Igor Vaynberg
 
-Version: @@ver@@ Timestamp: @@timestamp@@
+Version: 3.51 Timestamp: 2014-08-12
+
+**YAYASOFT Fork**
 
 This software is licensed under the Apache License, Version 2.0 (the "Apache License") or the GNU
 General Public License version 2 (the "GPL License"). You may choose either license to govern your
@@ -842,6 +844,16 @@ the specific language governing permissions and limitations under the Apache Lic
             if (this.autofocus) this.focus();
 
             this.search.attr("placeholder", opts.searchInputPlaceholder);
+            
+            
+            
+            if(this.opts.element.attr('dir') == 'rtl'){
+                var c_width = this.container.width();
+                var right = c_width - 20;
+                this.container.find('.select2-search-choice-close').css('right', right);
+                
+                
+            }
         },
 
         // abstract
@@ -1292,8 +1304,8 @@ the specific language governing permissions and limitations under the Apache Lic
                 this.container.removeClass('select2-drop-auto-width');
             }
 
-            //console.log("below/ droptop:", dropTop, "dropHeight", dropHeight, "sum", (dropTop+dropHeight)+" viewport bottom", viewportBottom, "enough?", enoughRoomBelow);
-            //console.log("above/ offset.top", offset.top, "dropHeight", dropHeight, "top", (offset.top-dropHeight), "scrollTop", this.body.scrollTop(), "enough?", enoughRoomAbove);
+            //
+            //
 
             // fix positioning when body has an offset and is not position: static
             if (this.body.css('position') !== 'static') {
@@ -1323,6 +1335,9 @@ the specific language governing permissions and limitations under the Apache Lic
                 this.container.removeClass("select2-drop-above");
                 $dropdown.removeClass("select2-drop-above");
             }
+            css.top = css.top - parseInt(this.container.css('height'));
+            this.dropdown.find('.select2-results').css('min-width', (this.container.css('width') - 18));
+            
             css = $.extend(css, evaluate(this.opts.dropdownCss, this.opts.element));
 
             $dropdown.css(css);
@@ -1710,6 +1725,17 @@ the specific language governing permissions and limitations under the Apache Lic
                 postRender();
             }
 
+            function setSpacing() {
+                var resWidth = results.parent().find('.select2-results').width();
+                results.parent().find('.select2-result-spacing').width(resWidth);
+                var resHeight = results.parent().find('.select2-results').height();
+                if(resWidth != 0 && resHeight != 0){
+                    results.parent().find('.select2-result-spacing').height(10);
+                } else {
+                    results.parent().find('.select2-result-spacing').height(0);
+                }
+            }
+
             queryNumber = ++this.queryCount;
 
             var maxSelSize = this.getMaximumSelectionSize();
@@ -1740,9 +1766,9 @@ the specific language governing permissions and limitations under the Apache Lic
                 return;
             }
 
-            if (opts.formatSearching && this.findHighlightableChoices().length === 0) {
-                render("<li class='select2-searching'>" + evaluate(opts.formatSearching, opts.element) + "</li>");
-            }
+            // if (opts.formatSearching && this.findHighlightableChoices().length === 0) {
+            //     render("<li class='select2-searching'>" + evaluate(opts.formatSearching, opts.element) + "</li>");
+            // }
 
             search.addClass("select2-active");
 
@@ -1799,6 +1825,7 @@ the specific language governing permissions and limitations under the Apache Lic
 
                 if (data.results.length === 0 && checkFormatter(opts.formatNoMatches, "formatNoMatches")) {
                     render("<li class='select2-no-results'>" + evaluate(opts.formatNoMatches, opts.element, search.val()) + "</li>");
+                    setSpacing();
                     return;
                 }
 
@@ -1812,8 +1839,17 @@ the specific language governing permissions and limitations under the Apache Lic
 
                 this.postprocessResults(data, initial);
 
+                //Re init of the perfect scroll bar
+                $(this.dropdown).find('.select2-results').css('min-width', this.container.width() - 18);
+                // $(this.dropdown).find('.select2-results').perfectScrollbar('destroy');
+                var rtl = false;
+                if(this.opts.element.attr('dir') == 'rtl'){
+                    rtl = true;
+                }
+                // $(this.dropdown).find('.select2-results').perfectScrollbar({suppressScrollX: true, isRTL: rtl});
+                this.search.attr("placeholder", opts.searchInputPlaceholder);
                 postRender();
-
+                setSpacing();
                 this.opts.element.trigger({ type: "select2-loaded", items: data });
             })});
         },
@@ -1943,24 +1979,56 @@ the specific language governing permissions and limitations under the Apache Lic
         // single
 
         createContainer: function () {
-            var container = $(document.createElement("div")).attr({
-                "class": "select2-container"
-            }).html([
-                "<a href='javascript:void(0)' class='select2-choice' tabindex='-1'>",
-                "   <span class='select2-chosen'>&#160;</span><abbr class='select2-search-choice-close'></abbr>",
-                "   <span class='select2-arrow' role='presentation'><b role='presentation'></b></span>",
-                "</a>",
-                "<label for='' class='select2-offscreen'></label>",
-                "<input class='select2-focusser select2-offscreen' type='text' aria-haspopup='true' role='button' />",
-                "<div class='select2-drop select2-display-none'>",
-                "   <div class='select2-search'>",
-                "       <label for='' class='select2-offscreen'></label>",
-                "       <input type='text' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='select2-input' role='combobox' aria-expanded='true'",
-                "       aria-autocomplete='list' />",
-                "   </div>",
-                "   <ul class='select2-results' role='listbox'>",
-                "   </ul>",
-                "</div>"].join(""));
+            var length = this.opts.maximumInputLength;
+            var rtl = "";
+            if(this.opts.element.attr("dir") == 'rtl'){
+                rtl = "dir=\"rtl\"";
+            }
+            if(length != 0){
+                var container = $(document.createElement("div")).attr({
+                    "class": "select2-container"
+                }).html([
+                    "<a href='javascript:void(0)' class='select2-choice' tabindex='-1' "+rtl+">",
+                    "   <span class='select2-chosen'>&#160;</span><abbr class='select2-search-choice-close'></abbr>",
+                    "   <span class='select2-arrow' role='presentation'><b role='presentation'></b></span>",
+                    "</a>",
+                    "<label for='' class='select2-offscreen'></label>",
+                    "<input class='select2-focusser select2-offscreen' type='text' aria-haspopup='true' role='button' />",
+                    "<div class='select2-drop select2-display-none'>",
+                    "   <div class='select2-search'>",
+                    "       <label for='' class='select2-offscreen'></label>",
+                    "       <input type='text' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='select2-input' role='combobox' aria-expanded='true'",
+                    "       aria-autocomplete='list' "+rtl+"/>",
+                    "   </div>",
+                    "   <div class='select2-result-container' "+rtl+">",
+                    "   <div class='select2-result-spacing'></div>",
+                    "       <ul class='select2-results' role='listbox'>",
+                    "       </ul>",
+                    "   </div>",
+                    "</div>"].join(""));
+            } else {
+                var container = $(document.createElement("div")).attr({
+                    "class": "select2-container select2-selecttype"
+                }).html([
+                    "<a href='javascript:void(0)' class='select2-choice' tabindex='-1' "+rtl+">",
+                    "   <span class='select2-chosen'>&#160;</span><abbr class='select2-search-choice-close'></abbr>",
+                    "   <span class='select2-arrow' role='presentation'><b role='presentation'></b></span>",
+                    "</a>",
+                    "<label for='' class='select2-offscreen'></label>",
+                    "<input class='select2-focusser select2-offscreen' type='text' aria-haspopup='true' role='button' />",
+                    "<div class='select2-drop select2-display-none'>",
+                    "   <div class='select2-search select2-selecttype'>",
+                    "       <label for='' class='select2-offscreen'></label>",
+                    "       <input type='text' readonly='true' autocomplete='off' autocorrect='off' autocapitalize='off' spellcheck='false' class='select2-input' role='combobox' aria-expanded='true'",
+                    "       aria-autocomplete='list' "+rtl+"/>",
+                    "   </div>",
+                    "   <div class='select2-result-container' "+rtl+">",
+                    "   <div class='select2-result-spacing'></div>",
+                    "       <ul class='select2-results' role='listbox'>",
+                    "       </ul>",
+                    "   </div>",
+                    "</div>"].join(""));
+            }
             return container;
         },
 
@@ -2014,11 +2082,29 @@ the specific language governing permissions and limitations under the Apache Lic
             this.focusser.prop("disabled", true).val("");
             this.updateResults(true);
             this.opts.element.trigger($.Event("select2-open"));
+            // $(this.dropdown).find('.select2-results').perfectScrollbar('destroy');
+            var rtl = false;
+            if(this.opts.element.attr('dir') == 'rtl'){
+                rtl = true;
+            }
+            // $(this.dropdown).find('.select2-results').perfectScrollbar({suppressScrollX: true, isRTL: rtl});
+            var resWidth = this.dropdown.find('.select2-results').width();
+            var resHeight = this.dropdown.find('.select2-results').height();
+                this.dropdown.find('.select2-result-spacing').width(resWidth);
+                if(resWidth != 0 && resHeight != 0){
+                    this.dropdown.find('.select2-result-spacing').height(10);
+                    
+                } else {
+                    this.dropdown.find('.select2-result-spacing').height(0);
+                    
+                }
+                
         },
 
         // single
         close: function () {
             if (!this.opened()) return;
+            // $(this.dropdown).find('.select2-results').perfectScrollbar('destroy');
             this.parent.close.apply(this, arguments);
 
             this.focusser.prop("disabled", false);
@@ -3231,7 +3317,7 @@ the specific language governing permissions and limitations under the Apache Lic
                     if (equal(this.opts.id(current[i]), this.opts.id(old[j]))) {
                         current.splice(i, 1);
                         if(i>0){
-                        	i--;
+                            i--;
                         }
                         old.splice(j, 1);
                         j--;
