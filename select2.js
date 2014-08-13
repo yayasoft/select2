@@ -851,8 +851,16 @@ the specific language governing permissions and limitations under the Apache Lic
                 var c_width = this.container.width();
                 var right = c_width - 20;
                 this.container.find('.select2-search-choice-close').css('right', right);
-                
-                
+            } else {
+                if($('body').attr('dir') == 'rtl'){
+                    var c_width = this.container.width();
+                    var right = c_width - 20;
+                    this.container.find('.select2-search-choice-close').css('right', right);
+                } else if($('body').css('direction') == 'rtl'){
+                    var c_width = this.container.width();
+                    var right = c_width - 20;
+                    this.container.find('.select2-search-choice-close').css('right', right);
+                }
             }
         },
 
@@ -1845,6 +1853,12 @@ the specific language governing permissions and limitations under the Apache Lic
                 var rtl = false;
                 if(this.opts.element.attr('dir') == 'rtl'){
                     rtl = true;
+                } else {
+                    if($('body').attr('dir') == 'rtl'){
+                        rtl = true;
+                    } else if($('body').css('direction') == 'rtl'){
+                        rtl = true;
+                    }
                 }
                 // $(this.dropdown).find('.select2-results').perfectScrollbar({suppressScrollX: true, isRTL: rtl});
                 this.search.attr("placeholder", opts.searchInputPlaceholder);
@@ -1983,6 +1997,12 @@ the specific language governing permissions and limitations under the Apache Lic
             var rtl = "";
             if(this.opts.element.attr("dir") == 'rtl'){
                 rtl = "dir=\"rtl\"";
+            } else {
+                if($('body').attr('dir') == 'rtl'){
+                    rtl = "dir=\"rtl\"";
+                } else if($('body').css('direction') == 'rtl'){
+                    rtl = "dir=\"rtl\"";
+                }
             }
             if(length != 0){
                 var container = $(document.createElement("div")).attr({
@@ -2086,6 +2106,12 @@ the specific language governing permissions and limitations under the Apache Lic
             var rtl = false;
             if(this.opts.element.attr('dir') == 'rtl'){
                 rtl = true;
+            } else {
+                if($('body').attr('dir') == 'rtl'){
+                    rtl = true;
+                } else if($('body').css('direction') == 'rtl'){
+                    rtl = true;
+                }
             }
             // $(this.dropdown).find('.select2-results').perfectScrollbar({suppressScrollX: true, isRTL: rtl});
             var resWidth = this.dropdown.find('.select2-results').width();
