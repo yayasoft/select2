@@ -972,6 +972,9 @@ the specific language governing permissions and limitations under the Apache Lic
                             node.addClass("select2-results-dept-"+depth);
                             node.addClass("select2-result");
                             node.addClass(selectable ? "select2-result-selectable" : "select2-result-unselectable");
+                            if(opts.multiple){
+                                node.addClass("select2-result-multiple");
+                            }
                             if (disabled) { node.addClass("select2-disabled"); }
                             if (compound) { node.addClass("select2-result-with-children"); }
                             node.addClass(self.opts.formatResultCssClass(result));
@@ -1343,9 +1346,16 @@ the specific language governing permissions and limitations under the Apache Lic
                 this.container.removeClass("select2-drop-above");
                 $dropdown.removeClass("select2-drop-above");
             }
-            css.top = css.top - parseInt(this.container.css('height'));
-            this.dropdown.find('.select2-results').css('min-width', (this.container.css('width') - 18));
-            
+            if(!this.opts.multiple){
+                css.top = css.top - parseInt(this.container.css('height'));
+            }
+            var c_width = parseInt(this.container.css('width'));
+            if(!this.opts.multiple){
+                this.dropdown.find('.select2-results').css('min-width', (c_width - 18));
+            } else {
+                this.dropdown.find('.select2-results').css('min-width', (c_width - 8));
+            }
+
             css = $.extend(css, evaluate(this.opts.dropdownCss, this.opts.element));
 
             $dropdown.css(css);
@@ -1848,7 +1858,12 @@ the specific language governing permissions and limitations under the Apache Lic
                 this.postprocessResults(data, initial);
 
                 //Re init of the perfect scroll bar
-                $(this.dropdown).find('.select2-results').css('min-width', this.container.width() - 18);
+                var c_width = parseInt(this.container.css('width'));
+                if(!this.opts.multiple){
+                    this.dropdown.find('.select2-results').css('min-width', (c_width - 18));
+                } else {
+                    this.dropdown.find('.select2-results').css('min-width', (c_width - 4));
+                }
                 // $(this.dropdown).find('.select2-results').perfectScrollbar('destroy');
                 var rtl = false;
                 if(this.opts.element.attr('dir') == 'rtl'){
@@ -2672,8 +2687,22 @@ the specific language governing permissions and limitations under the Apache Lic
 
         // multi
         createContainer: function () {
+            var isRTL = 'dir="ltr"';;
+            var rtl = true;
+            if(this.opts.element.attr('dir') == 'rtl'){
+                isRTL = 'dir="rtl"';
+            } else {
+                if($('body').attr('dir') == 'rtl'){
+                    isRTL = 'dir="rtl"';
+                } else if($('body').css('direction') == 'rtl'){
+                    isRTL = 'dir="rtl"';
+                } else {
+                    rtl = false;
+                }
+            }
             var container = $(document.createElement("div")).attr({
-                "class": "select2-container select2-container-multi"
+                "class": "select2-container select2-container-multi",
+                "dir" : rtl ? 'rtl' : 'ltr'
             }).html([
                 "<ul class='select2-choices'>",
                 "  <li class='select2-search-field'>",
@@ -2682,6 +2711,13 @@ the specific language governing permissions and limitations under the Apache Lic
                 "  </li>",
                 "</ul>",
                 "<div class='select2-drop select2-drop-multi select2-display-none'>",
+                "   <div style=\"border-radius: 0px;z-index: 9999;box-shadow: 1px 2px 3px #ACAEA2;\">",
+                "       <div><ul class=\"select2-choices-selected\" " +isRTL+ "></ul></div>",
+                "       <div class=\"select2-multi-controllers\">",
+                "           <button class=\"btn-link btn-small\"><i class=\"icon-ok\"></i> בחר הכל</button>",
+                "           <button class=\"btn-link btn-small\"><i class=\"icon-remove\"></i> מחק הכל</button>",
+                "       </div>",
+                "   </div>",
                 "   <ul class='select2-results'>",
                 "   </ul>",
                 "</div>"].join(""));
@@ -3142,7 +3178,7 @@ the specific language governing permissions and limitations under the Apache Lic
         addSelectedChoice: function (data) {
             var enableChoice = !data.locked,
                 enabledItem = $(
-                    "<li class='select2-search-choice'>" +
+                    "<li class='select2-search-choice ms-selected-item'>" +
                     "    <div></div>" +
                     "    <a href='#' class='select2-search-choice-close' tabindex='-1'></a>" +
                     "</li>"),
@@ -3184,7 +3220,12 @@ the specific language governing permissions and limitations under the Apache Lic
             }
 
             choice.data("select2-data", data);
-            choice.insertBefore(this.searchContainer);
+            var beforeButtons = this.container.find('.select2-multi-controllers');
+            console.log(this.dropdown.find('.select2-multi-controllers'));
+            console.log(this.searchContainer);
+            // choice.insertBefore(this.searchContainer);
+            this.dropdown.find('.select2-choices-selected').append(choice);
+
 
             val.push(id);
             this.setVal(val);
